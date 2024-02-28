@@ -1,7 +1,8 @@
 import { StyleSheet, View, Text, Button, TextInput, Pressable, Keyboard } from "react-native";
 import { useState } from "react";
 import CheckBox from "expo-checkbox";
-import API from "../../API/api";
+// import API from "../../API/api";
+import { signup, login } from "../../API/userApi";
 import LS from "../../utils/localstorage";
 
 
@@ -24,7 +25,7 @@ export default function Signup({ setViewedPage, setUserInfo }) {
     // SIGNUP FUNCTION
 
     // Function runs on press of signup button
-    const signup = async () => {
+    const signupUser = async () => {
         try {
 
             // Wrapping/preparing data
@@ -38,10 +39,14 @@ export default function Signup({ setViewedPage, setUserInfo }) {
             }
     
             // Sending prepared data to server for user signup
-            await API.signup(userData);
+            const signupResponse = await signup(userData);
+
+            console.log(signupResponse);
 
             // After signup, log the new user in
-            const loginResponse = await API.login({ email: email, password: password });
+            const loginResponse = await login({ email: email, password: password });
+
+            console.log(loginResponse);
 
             // Declaring tokens
             const atkn = loginResponse.data.accessToken;
@@ -128,7 +133,7 @@ export default function Signup({ setViewedPage, setUserInfo }) {
             <Text style={styles.errorMessage}>{errorMessage}</Text>
 
             {/* Signup button */}
-            <Button title="Signup" onPress={signup} />
+            <Button title="Signup" onPress={signupUser} />
 
             {/* Button that sends user back to login page */}
             <Pressable style={styles.loginPress} onPress={() => setViewedPage('login')}>

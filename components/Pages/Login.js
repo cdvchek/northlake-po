@@ -1,6 +1,7 @@
 import { StyleSheet, View, Text, Button, TextInput, Pressable, Keyboard } from "react-native";
 import { useState } from "react";
-import API from "../../API/api";
+import { login } from "../../API/userApi";
+import LS from "../../utils/localstorage";
 
 
 
@@ -20,9 +21,8 @@ export default function Login({ setUserInfo, setViewedPage }) {
     // LOGIN FUNCTION
 
     // Function runs on press of login butotn
-    const login = async () => {
+    const loginUser = async () => {
         try {
-
             // Wrapping/preparing data
             const userData = {
                 email,
@@ -30,23 +30,27 @@ export default function Login({ setUserInfo, setViewedPage }) {
             }
 
             // Sending prepared data to server for user login
-            const loginResponse = await API.login(userData);
+            const loginResponse = await login(userData);
 
-            // After login, set the user data for react
-            setUserInfo(loginResponse.data.user);
-
-            // Declaring tokens
-            const atkn = loginResponse.data.accessToken;
-            const rtkn = loginResponse.data.refreshToken;
-
-            // Storing tokens
-            await LS.storeAToken(atkn);
-            await LS.storeRToken(rtkn);
-
-            // Once ready, send user to "my-expenses" (home) page
-            setViewedPage('my-expenses');
-
+            if (loginResponse) {
+                
+                
+                // After login, set the user data for react
+                setUserInfo(loginResponse.data.user);
+                
+                // Declaring tokens
+                const atkn = loginResponse.data.accessToken;
+                const rtkn = loginResponse.data.refreshToken;
+                
+                // Storing tokens
+                await LS.storeAToken(atkn);
+                await LS.storeRToken(rtkn);
+                
+                // Once ready, send user to "my-expenses" (home) page
+                setViewedPage('my-expenses');
+            }  
         } catch (error) {
+            console.log(error);
             setErrorMessage(error.response.data.error);
         }
     }
@@ -83,7 +87,7 @@ export default function Login({ setUserInfo, setViewedPage }) {
             <Text style={styles.errorMessage}>{errorMessage}</Text>
 
             {/* Login button */}
-            <Button title="Login" onPress={login} />
+            <Button title="Login" onPress={loginUser} />
 
             {/* Go to signup page button */}
             <Pressable style={styles.signupPress} onPress={() => setViewedPage('signup')}>

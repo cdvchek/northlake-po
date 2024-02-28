@@ -1,33 +1,30 @@
 import { StyleSheet, Pressable, View, Text, Button, Keyboard, ScrollView, Image } from "react-native";
 import { useState, useEffect } from "react";
-import API from "../../API/api.js";
-import LS from "../../utils/localstorage.js";
+import { getExpense, getImageUrl, editExpensePhoto, editExpense } from "../../API/expenseApi.js";
 
 import BackButton from "../BackButton.js";
 import VendorInput from "./ExpenseFormInput/VendorInput.js";
 import AmountInput from "./ExpenseFormInput/AmountInput.js";
-import ReimbursementInput from  "./ExpenseFormInput/ReimbursementInput.js";
 import ExpenseDefiners from "./ExpenseFormInput/ExpenseDefiners.js";
-import BusinessPurposeInput from "./ExpenseFormInput/BusinessPurposeInput.js";
 import DateInput from "./ExpenseFormInput/DateInput.js";
 import RecieptPhotoInput from "./ExpenseFormInput/RecieptPhotoInput.js";
 import CameraComp from "../CameraComp.js";
+import ExpenseTypeInput from "./ExpenseFormInput/ExpenseTypeInput.js";
 
-export default function ExpenseFormEdit({ id, modalVisible, setModalVisible }) {
+export default function ExpenseFormEdit({ id, modalVisible, setModalVisible, createdExpense, setCreatedExpense }) {
 
+    const [expenseType, setExpenseType] = useState("Church Credit Card");
     const [vendor, setVendor] = useState();
     const [vendorErr, setVendorErr] = useState(false);
     const [amount, setAmount] = useState();
     const [amountErr, setAmountErr] = useState(false);
-    const [reimbursement, setReimbursement] = useState();
     const [expenseNumbers, setExpenseNumbers] = useState();
-    const [expenseNumbersErr, setExpenseNumbersErr] = useState(null);
+    const [expenseAmountErr, setExpenseAmountErr] = useState(null);
+    const [expenseBPErr, setExpenseBPErr] = useState(null);
     // Values for expenseNumbersErr:
     // (-1): Expense Numbers Amounts do not add up to Amount
     // (null): Nothing wrong
     // (>0): Expense Number Amount Input not filled in (the value of the error is the index that is missing)
-    const [businessPurpose, setBusinessPurpose] = useState();
-    const [businessPurposeErr, setBusinessPurposeErr] = useState(false);
     const [date, setDate] = useState(() => new Date());
     const [cameraOpen, setCameraOpen] = useState(false);
     const [receiptPhoto, setReceiptPhoto] = useState();
@@ -42,30 +39,28 @@ export default function ExpenseFormEdit({ id, modalVisible, setModalVisible }) {
     // When the modal opens, get a new url for the photo
     useEffect(() => {
         if (modalVisible) {
-            getImageUrl();
+            loadImageUrl();
         }
     }, [modalVisible]);
 
     // Filling out the expense form
     const onLoad = async () => {
-        const aTkn = await LS.getAToken();
-        const expenseData = (await API.getExpense(aTkn, id)).data;
+        const expenseData = (await getExpense(id)).data;
+        setExpenseType(expenseData.expense_type);
         setVendor(expenseData.vendor);
         setAmount(expenseData.amount);
-        setReimbursement(expenseData.reimbursement);
-        setBusinessPurpose(expenseData.business_purpose);
         setDate(new Date(expenseData.date_expense));
-
-        const expenseNumbersRaw = [...expenseData.ExpenseNumbers];
-        const pulledExpenseNumbers = expenseNumbersRaw.map((expenseNumber) => [expenseNumber.expense_number, expenseNumber.amount]);
+        
+        const expenseNumbersRaw = [...expenseData.ExpenseDefiners];
+        const pulledExpenseNumbers = expenseNumbersRaw.map((expenseNumber) => [expenseNumber.expense_number, expenseNumber.amount, expenseNumber.business_purpose]);
+        console.log(pulledExpenseNumbers);
 
         setExpenseNumbers(pulledExpenseNumbers);
     }
 
     // Getting a new valid url for the reciept photo
-    const getImageUrl = async () => {
-        const aTkn = await LS.getAToken();
-        const imageUrl = (await API.getImageUrl(aTkn, id)).data;
+    const loadImageUrl = async () => {
+        const imageUrl = (await getImageUrl(id)).data;
         setReceiptPhoto(imageUrl.url);
     }
 
@@ -81,51 +76,51 @@ export default function ExpenseFormEdit({ id, modalVisible, setModalVisible }) {
 
         if (allowSave) {
             // New photo (update everything)
-            const aTkn = await LS.getAToken();
-
             if (receiptPhoto.uri) {
                 const name = `${Date.now()}`;
     
                 const formData = new FormData();
     
+                formData.append('expenseType', expenseType);
                 formData.append('image', { uri: receiptPhoto.uri, type: receiptPhoto.type, name: name });
                 formData.append('vendor', vendor);
                 formData.append('amount', amount);
-                formData.append('reimbursement', reimbursement);
-                formData.append('business_purpose', businessPurpose);
                 formData.append('date_expense', date.toISOString());
                 formData.append('number_of_expense_numbers', expenseNumbers.length);
     
                 for (let i = 0; i < expenseNumbers.length; i++) {
                     const expenseNumber = expenseNumbers[i][0];
                     const expenseNumberAmount = expenseNumbers[i][1];
+                    const businessPurpose = expenseNumbers[i][2];
     
                     formData.append(`expense_number_${i}`, expenseNumber);
                     formData.append(`expense_number_amount_${i}`, expenseNumberAmount);
+                    formData.append(`business_purpose_${i}`, businessPurpose);
                 }
     
-                const response = await API.editExpensePhoto(aTkn, formData, id);
+                const response = await editExpensePhoto(formData, id);
     
                 if (response.status === 200) {
                     setModalVisible(false);
+                    setCreatedExpense(!createdExpense);
                 } else {
                     // show that the creation was bad and something happened
                 }
             // No new photo, just edit the form values
             } else {
                 const expenseData = {
+                    expenseType,
                     vendor,
                     amount,
-                    reimbursement,
                     expenseNumbers,
-                    businessPurpose,
                     date,
                 }
                 
-                const response = await API.editExpense(aTkn, expenseData, id);
+                const response = await editExpense(expenseData, id);
     
                 if (response.status === 200) {
                     setModalVisible(false);
+                    setCreatedExpense(!createdExpense);
                 } else {
                     // say something bad happened and discard changes
                 }
@@ -138,7 +133,7 @@ export default function ExpenseFormEdit({ id, modalVisible, setModalVisible }) {
         let vendorCheck = true;
         let amountCheck = true;
         let expenseNumbersCheck = true;
-        let businessPurposeCheck = true;
+        let businessPurposesCheck = true;
         let receiptPhotoCheck = true;
 
         // Checking Vendor
@@ -160,8 +155,13 @@ export default function ExpenseFormEdit({ id, modalVisible, setModalVisible }) {
             const expenseNumber = expenseNumbers[i];
             if (!expenseNumber[1]) {
                 expenseNumbersCheck = false;
-                setExpenseNumbersErr(i);
+                setExpenseAmountErr(i);
             } else expenseNumbersSum += Number(expenseNumber[1]);
+
+            if (!expenseNumber[2]) {
+                businessPurposesCheck = false;
+                setExpenseBPErr(i);
+            }
         }
 
         const sumRounded = Math.round(expenseNumbersSum * 100) / 100;
@@ -169,19 +169,18 @@ export default function ExpenseFormEdit({ id, modalVisible, setModalVisible }) {
         // Make sure everything adds up
         if (amount != sumRounded) {
             expenseNumbersCheck = false;
-            setExpenseNumbersErr(-1);
+            setExpenseAmountErr(-1);
         }
 
-        // Reset the error value
-        if (expenseNumbersErr && expenseNumbersCheck) {
-            setExpenseNumbersErr(null);
+        // Reset the amounterr value
+        if (expenseAmountErr && expenseNumbersCheck) {
+            setExpenseAmountErr(null);
         }
 
-        // Check Business Purpose
-        if (!businessPurpose) {
-            businessPurposeCheck = false;
-            setBusinessPurposeErr(true);
-        } else setBusinessPurposeErr(false);
+        // Reset the bperr value
+        if (expenseBPErr && expenseNumbersCheck) {
+            setExpenseBPErr(null);
+        }
 
         // Check Receipt Photo
         if (!receiptPhoto) {
@@ -190,7 +189,7 @@ export default function ExpenseFormEdit({ id, modalVisible, setModalVisible }) {
         } else setReceiptPhotoErr(false);
 
         // If everything checks out, return true, else, return false
-        if (vendorCheck && amountCheck && expenseNumbersCheck && businessPurposeCheck && receiptPhotoCheck) {
+        if (vendorCheck && amountCheck && expenseNumbersCheck && businessPurposesCheck && receiptPhotoCheck) {
             return true;
         } else return false;
     }
@@ -219,11 +218,10 @@ export default function ExpenseFormEdit({ id, modalVisible, setModalVisible }) {
                 <Pressable style={styles.view} onPress={() => Keyboard.dismiss()}>
                     <Text style={styles.formTitle}>Edit Expense</Text>
                     <BackButton onPress={() => setModalVisible(false)} />
+                    <ExpenseTypeInput expenseType={expenseType} setExpenseType={setExpenseType} />
                     <VendorInput vendor={vendor} setVendor={setVendor} error={vendorErr} />
                     <AmountInput amount={amount} setAmount={setAmount} error={amountErr} />
-                    <ReimbursementInput reimbursement={reimbursement} setReimbursement={setReimbursement} />
-                    <ExpenseDefiners expenseNumbers={expenseNumbers} setExpenseNumbers={setExpenseNumbers} error={expenseNumbersErr} />
-                    <BusinessPurposeInput businessPurpose={businessPurpose} setBusinessPurpose={setBusinessPurpose} error={businessPurposeErr} />
+                    <ExpenseDefiners expenseNumbers={expenseNumbers} setExpenseNumbers={setExpenseNumbers} amountErr={expenseAmountErr} bpErr={expenseBPErr} />
                     <DateInput date={date} setDate={setDate} />
                     <RecieptPhotoInput setViewPicture={setViewPicture} setCameraOpen={setCameraOpen} receiptPhoto={receiptPhoto} setReceiptPhoto={setReceiptPhoto} error={receiptPhotoErr} />
                     <Button title="Save Expense" onPress={saveExpense} />

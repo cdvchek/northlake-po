@@ -1,10 +1,9 @@
 import { StyleSheet, Pressable, View, Text } from "react-native";
 import { useEffect, useState } from "react";
-import API from "../API/api";
-import LS from "../utils/localstorage";
+import { getExpense } from "../API/expenseApi";
 import ExpenseModal from "./ExpenseModal/ExpenseModal";
 
-export default function ExpenseCard({ id }) {
+export default function ExpenseCard({ id, createdExpense, setCreatedExpense }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [vendor, setVendor] = useState(null);
     const [amount, setAmount] = useState(null);
@@ -13,12 +12,11 @@ export default function ExpenseCard({ id }) {
 
     useEffect(() => {
         setExpenseData(id);
-    },[])
+    }, [createdExpense])
 
     const setExpenseData = async (id) => {
         try {
-            const atkn = await LS.getAToken()
-            const expenseData = (await API.getExpense(atkn, id)).data;
+            const expenseData = (await getExpense(id)).data;
 
             console.log(expenseData);
 
@@ -61,7 +59,7 @@ export default function ExpenseCard({ id }) {
                 (approved) ?
                 <ExpenseModal expenseId={id} modalVisible={modalVisible} setModalVisible={setModalVisible} formType="view" />
                 :
-                <ExpenseModal expenseId={id} modalVisible={modalVisible} setModalVisible={setModalVisible} formType="edit" />
+                <ExpenseModal expenseId={id} modalVisible={modalVisible} setModalVisible={setModalVisible} createdExpense={createdExpense} setCreatedExpense={setCreatedExpense} formType="edit" />
             }
         </>
     );

@@ -17,7 +17,6 @@ export default function ExpenseNumberAmountInput({ expenseNumberIndex, expenseNu
         const newExpenseNumbers = expenseNumbers;
         newExpenseNumbers[expenseNumberIndex][1] = amount;
         setExpenseNumbers(newExpenseNumbers);
-        // setChangeExpenseNumbers(!changeExpenseNumbers);
     }
 
     return (
@@ -25,7 +24,7 @@ export default function ExpenseNumberAmountInput({ expenseNumberIndex, expenseNu
             <Text style={styles.modalSubTitle}>Expense Number Amount (#{expenseNumberIndex + 1})</Text>
             <View style={styles.modalInputView}>
                 <Text style={styles.amountDollarSign}>$</Text>
-                <TextInput style={styles.modalInput} defaultValue={amount} inputMode="decimal" keyboardType="decimal-pad" onChangeText={(value) => onChange(value)} onEndEditing={onEndEditing} />
+                <TextInput style={styles.modalInput} defaultValue={amount} inputMode="decimal" keyboardType="decimal-pad" onChangeText={(value) => onChange(value)} onEndEditing={() => onEndEditing()} />
             </View>
         </View>
     );

@@ -1,6 +1,6 @@
-import { StyleSheet, View, Text, Button, Pressable } from "react-native";
+import { StyleSheet, View, Text, Pressable } from "react-native";
 import { useState, useEffect } from "react";
-import API from "../../API/api";
+import { getAllExpenses } from "../../API/expenseApi";
 
 // import ExpenseModal from "../ExpenseModal";
 import ExpenseCard from "../ExpenseCard";
@@ -10,8 +10,7 @@ export default function Manage({ userInfo }) {
     const [expenses, setExpenses] = useState(null);
 
     const getIDs = async () => {
-        const atkn = await LS.getAToken();
-        const response = await API.getAllExpenses(atkn);
+        const response = await getAllExpenses();
         return response.data;
     }
 

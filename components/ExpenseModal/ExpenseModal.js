@@ -18,7 +18,7 @@ export default function ExpenseModal({ expenseId, modalVisible, setModalVisible,
         case "edit":
             return (
                 <Modal animationType="slide" transparent={false} visible={modalVisible} style={styles.modal}>
-                    <ExpenseFormEdit id={expenseId} modalVisible={modalVisible} setModalVisible={setModalVisible} />
+                    <ExpenseFormEdit id={expenseId} modalVisible={modalVisible} setModalVisible={setModalVisible} createdExpense={createdExpense} setCreatedExpense={setCreatedExpense} />
                 </Modal>
             )
 
@@ -32,7 +32,7 @@ export default function ExpenseModal({ expenseId, modalVisible, setModalVisible,
         default:
             return (
                 <Modal animationType="slide" transparent={false} visible={modalVisible} style={styles.modal}>
-                    <ExpenseFormEnter setModalVisible={setModalVisible} />
+                    <ExpenseFormEnter setModalVisible={setModalVisible} createdExpense={createdExpense} setCreatedExpense={setCreatedExpense} />
                 </Modal>
             )
     }    

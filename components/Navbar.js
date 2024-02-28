@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Pressable, Platform } from 'react-native';
+import { StyleSheet, View, Pressable, Platform } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 // Navbar Component

@@ -1,7 +1,6 @@
 import { StyleSheet, View, Text, ScrollView, Image } from "react-native";
 import { useState, useEffect } from "react";
-import API from "../../API/api.js";
-import LS from "../../utils/localstorage.js";
+import { getExpense, getImageUrl } from "../../API/expenseApi.js";
 
 import BackButton from "../BackButton.js";
 import VendorView from "./ExpenseFormView/VendorView.js";
@@ -31,14 +30,13 @@ export default function ExpenseFormView({ id, modalVisible, setModalVisible }) {
     // When the modal opens, get a new url for the photo
     useEffect(() => {
         if (modalVisible) {
-            getImageUrl();
+            loadImageUrl();
         }
     }, [modalVisible]);
 
     // Filling out the expense form
     const onLoad = async () => {
-        const aTkn = await LS.getAToken();
-        const expenseData = (await API.getExpense(aTkn, id)).data;
+        const expenseData = (await getExpense(id)).data;
         setVendor(expenseData.vendor);
         setAmount(expenseData.amount);
         setReimbursement(expenseData.reimbursement);
@@ -52,9 +50,8 @@ export default function ExpenseFormView({ id, modalVisible, setModalVisible }) {
     }
 
     // Getting a new valid url for the reciept photo
-    const getImageUrl = async () => {
-        const aTkn = await LS.getAToken();
-        const imageUrl = (await API.getImageUrl(aTkn, id)).data;
+    const loadImageUrl = async () => {
+        const imageUrl = (await getImageUrl(id)).data;
         setReceiptPhoto(imageUrl.url);
     }
 

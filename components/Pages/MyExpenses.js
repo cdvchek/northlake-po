@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import ExpenseModal from "../ExpenseModal/ExpenseModal";
 import ExpenseCard from "../ExpenseCard";
 import LS from "../../utils/localstorage";
-import API from "../../API/api";
+import { getMyExpenses } from "../../API/expenseApi";
+import { checkAccessToken, getAccessToken } from "../../API/tokenApi";
 
 export default function MyExpenses(props) {
     const { userInfo, setVeiwedPage } = props;
@@ -16,8 +17,7 @@ export default function MyExpenses(props) {
     const [aState, setAppState] = useState(AppState.currentState);
 
     const getIDs = async () => {
-        const atkn = await LS.getAToken();
-        const response = await API.getMyExpenses(atkn);
+        const response = await getMyExpenses();
         return response.data;
     }
 
@@ -30,12 +30,11 @@ export default function MyExpenses(props) {
     useEffect(() => {
         setUserExpenses();
         async function checkAToken() {
-            const atkn = await LS.getAToken();
-            const tokenCheckResponse = await API.checkAccessToken(atkn);
+            const tokenCheckResponse = await checkAccessToken();
             if (tokenCheckResponse.status !== 200) {
                 // Get a new access token
                 const rtkn = await LS.getRToken();
-                const response = await API.getAccessToken(rtkn);
+                const response = await getAccessToken(rtkn);
                 if (response.status = 200) {
                     const newATkn = response.data.accessToken;
                     await LS.storeAToken(newATkn);
@@ -80,7 +79,7 @@ export default function MyExpenses(props) {
                 <View style={styles.expenseCards}>
                 {!loadingExpenses && (expenses.length > 0) && expenses.map((expense) => {
                     return (
-                        <ExpenseCard key={expense} id={expense}/>
+                        <ExpenseCard key={expense} id={expense} createdExpense={createdExpense} setCreatedExpense={setCreatedExpense} />
                     );
                 })}
                 </View>
