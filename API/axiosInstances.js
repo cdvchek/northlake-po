@@ -1,9 +1,9 @@
 import axios from 'axios';
 import LS from '../utils/localstorage';
-import { hannahs_house, carsdans_house, danicas_house, jens_house } from '@env';
+import { hannahshouse, carsdanshouse } from '@env';
 
 // Testing Build
-const URL_PREFIX = `http://192.168.0.38:3000`;
+const URL_PREFIX = `http://${carsdanshouse}:3000`;
 
 const baseInstance = axios.create({
     baseURL: URL_PREFIX,

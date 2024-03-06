@@ -47,7 +47,7 @@ export default function DateSelect({ date, setDate }) {
                 <>
                     {(Platform.OS === "android") && 
                         <View style={styles.modalInputView}>
-                                <Pressable style={styles.openDatePressable} onPress={() => openDatePickerAndroid()}><Text>{androidDateString}</Text></Pressable>
+                            <Pressable style={styles.openDatePressable} onPress={() => openDatePickerAndroid()}><Text>{androidDateString}</Text></Pressable>
                         </View>
                     }
                 </>

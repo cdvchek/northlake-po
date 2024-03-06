@@ -11,13 +11,9 @@ export default function BusinessPurposeInput({ expenseNumberIndex, expenseNumber
 
     const onChange = (value) => {
         setBusinessPurpose(value);
-    }
-
-    const onEndEditing = () => {
         const newExpenseNumbers = expenseNumbers;
-        newExpenseNumbers[expenseNumberIndex][2] = businessPurpose;
+        newExpenseNumbers[expenseNumberIndex][2] = value;
         setExpenseNumbers(newExpenseNumbers);
-        console.log(expenseNumbers);
     }
 
     return (
@@ -30,7 +26,7 @@ export default function BusinessPurposeInput({ expenseNumberIndex, expenseNumber
                 } */}
             </View>
             <View style={styles.modalInputViewMultiLine}>
-                <TextInput style={styles.modalInput} defaultValue={businessPurpose} value={businessPurpose} multiline={true} onChangeText={(value) => onChange(value)} onEndEditing={() => onEndEditing()} />
+                <TextInput style={styles.modalInput} defaultValue={businessPurpose} value={businessPurpose} multiline={true} onChangeText={(value) => onChange(value)} />
             </View>
         </View>
     );

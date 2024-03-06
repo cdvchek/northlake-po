@@ -3,7 +3,10 @@ import { useState } from "react";
 import { createExpense } from "../../API/expenseApi.js";
 
 import BackButton from "../BackButton.js";
+import NotMyCardCheckBoxInput from "./ExpenseFormInput/NotMyCardInput.js";
+import CreditCardInput from "./ExpenseFormInput/CreditCardInput.js";
 import VendorInput from "./ExpenseFormInput/VendorInput.js";
+import AddressInput from "./ExpenseFormInput/AddressInput.js";
 import AmountInput from "./ExpenseFormInput/AmountInput.js";
 import ExpenseDefiners from "./ExpenseFormInput/ExpenseDefiners.js";
 import DateInput from "./ExpenseFormInput/DateInput.js";
@@ -14,8 +17,13 @@ import ExpenseTypeInput from "./ExpenseFormInput/ExpenseTypeInput.js";
 export default function ExpenseFormEnter({ setModalVisible, createdExpense, setCreatedExpense }) {
 
     const [expenseType, setExpenseType] = useState("Church Credit Card");
+    const [notMyCard, setNotMyCard] = useState(false);
+    const [creditCardHolder, setCreditCardHolder] = useState("");
+    const [creditCardHolderErr, setCreditCardHolderErr] = useState(false);
     const [vendor, setVendor] = useState();
     const [vendorErr, setVendorErr] = useState(false);
+    const [address, setAddress] = useState("");
+    const [addressErr, setAddressErr] = useState(false);
     const [amount, setAmount] = useState();
     const [amountErr, setAmountErr] = useState(false);
     const [expenseNumbers, setExpenseNumbers] = useState([['Option 1', null, ""]]);
@@ -40,8 +48,10 @@ export default function ExpenseFormEnter({ setModalVisible, createdExpense, setC
             const formData = new FormData();
 
             formData.append('expenseType', expenseType);
+            formData.append('credit_card_holder', (expenseType === 'Church Credit Card' ? ((notMyCard) ? creditCardHolder : "self") : ''));
             formData.append('image', { uri: receiptPhoto.uri, type: receiptPhoto.type, name: name });
             formData.append('vendor', vendor);
+            formData.append('address', address);
             formData.append('amount', amount);
             formData.append('date_expense', date.toISOString());
             formData.append('number_of_expense_numbers', expenseNumbers.length);
@@ -71,6 +81,8 @@ export default function ExpenseFormEnter({ setModalVisible, createdExpense, setC
     // Function that checks the validity of the forms inputs and handles error messages if they aren't valid
     const checkInputs = () => {
         let vendorCheck = true;
+        let creditCardHolderCheck = true;
+        let addressCheck = true;
         let amountCheck = true;
         let expenseNumbersCheck = true;
         let businessPurposesCheck = true;
@@ -81,6 +93,24 @@ export default function ExpenseFormEnter({ setModalVisible, createdExpense, setC
             vendorCheck = false;
             setVendorErr(true);
         } else setVendorErr(false);
+
+        // Checking Credit Card Holder
+        if (expenseType === "Credit Card Holder") {
+            if (notMyCard) {
+                if (!creditCardHolder) {
+                    creditCardHolderCheck = false;
+                    setCreditCardHolderErr(true);
+                } else setCreditCardHolderErr(false);
+            }
+        }
+
+        // Checking Address
+        if (expenseType === "Personal Reimbursement") {
+            if (!address) {
+                addressCheck = false;
+                setAddressErr(true);
+            } else setAddressErr(false);
+        }
 
         // Checking Amount
         if (!amount) {
@@ -130,7 +160,7 @@ export default function ExpenseFormEnter({ setModalVisible, createdExpense, setC
         } else setReceiptPhotoErr(false);
 
         // If everything checks out, return true, else, return false
-        if (vendorCheck && amountCheck && expenseNumbersCheck && businessPurposesCheck && receiptPhotoCheck) {
+        if (vendorCheck && creditCardHolderCheck && addressCheck && amountCheck && expenseNumbersCheck && businessPurposesCheck && receiptPhotoCheck) {
             return true;
         } else return false;
     }
@@ -155,7 +185,10 @@ export default function ExpenseFormEnter({ setModalVisible, createdExpense, setC
                     <Text style={styles.formTitle}>Submit Expense</Text>
                     <BackButton onPress={() => setModalVisible(false)} />
                     <ExpenseTypeInput expenseType={expenseType} setExpenseType={setExpenseType} />
-                    <VendorInput vendor={vendor} setVendor={setVendor} error={vendorErr} />
+                    { expenseType === "Church Credit Card" && <NotMyCardCheckBoxInput notMyCard={notMyCard} setNotMyCard={setNotMyCard} />}
+                    { expenseType === "Church Credit Card" && notMyCard && <CreditCardInput creditCardHolder={creditCardHolder} setCreditCardHolder={setCreditCardHolder} error={creditCardHolderErr} />}
+                    <VendorInput vendor={vendor} setVendor={setVendor} error={vendorErr} expenseType={expenseType} />
+                    { expenseType === "Personal Reimbursement" && <AddressInput address={address} setAddress={setAddress} error={addressErr} />}
                     <AmountInput amount={amount} setAmount={setAmount} error={amountErr} />
                     <ExpenseDefiners expenseNumbers={expenseNumbers} setExpenseNumbers={setExpenseNumbers} amountErr={expenseAmountErr} bpErr={expenseBPErr} />
                     <DateInput date={date} setDate={setDate} />

@@ -3,7 +3,9 @@ import { useState, useEffect } from "react";
 import { getExpense, getImageUrl } from "../../API/expenseApi.js";
 
 import BackButton from "../BackButton.js";
+import ExpenseTypeView from "./ExpenseFormView/ExpenseTypeView.js";
 import VendorView from "./ExpenseFormView/VendorView.js";
+import AddressView from "./ExpenseFormView/AddressView.js";
 import AmountView from "./ExpenseFormView/AmountView.js";
 import ReimbursementView from "./ExpenseFormView/ReimbursementView.js";
 import ExpenseDefinersView from "./ExpenseFormView/ExpenseDefinersView.js";
@@ -13,6 +15,7 @@ import RecieptPhotoView from "./ExpenseFormView/ReceiptPhotoView.js";
 
 export default function ExpenseFormView({ id, modalVisible, setModalVisible }) {
 
+    const [expenseType, setExpenseType] = useState();
     const [vendor, setVendor] = useState();
     const [amount, setAmount] = useState();
     const [reimbursement, setReimbursement] = useState();
@@ -37,7 +40,9 @@ export default function ExpenseFormView({ id, modalVisible, setModalVisible }) {
     // Filling out the expense form
     const onLoad = async () => {
         const expenseData = (await getExpense(id)).data;
+        setExpenseType(expenseData.expense_type);
         setVendor(expenseData.vendor);
+        setAddress(expenseData.address);
         setAmount(expenseData.amount);
         setReimbursement(expenseData.reimbursement);
         setBusinessPurpose(expenseData.business_purpose);
@@ -70,7 +75,9 @@ export default function ExpenseFormView({ id, modalVisible, setModalVisible }) {
                 <View style={styles.view}>
                     <Text style={styles.formTitle}>View Expense</Text>
                     <BackButton onPress={() => setModalVisible(false)} />
-                    <VendorView vendor={vendor} />
+                    <ExpenseTypeView expenseType={expenseType} />
+                    <VendorView vendor={vendor} expenseType={expenseType} />
+                    { expenseType === "Personal Reimbursement" && <AddressView address={address} />}
                     <AmountView amount={amount} />
                     <ReimbursementView reimbursement={reimbursement} />
                     <ExpenseDefinersView expenseNumbers={expenseNumbers} />
